@@ -1,0 +1,17 @@
+#!/bin/bash
+# First-boot setup for prod-db. Rendered by Terraform templatefile().
+set -euo pipefail
+
+# Join the tailnet as tag:prod-db and enable Tailscale SSH.
+curl -fsSL https://tailscale.com/install.sh | sh
+tailscale up --auth-key="${ts_auth_key}" --hostname=prod-db --ssh
+
+# Postgres, reachable only from tailnet addresses (AWS firewall blocks all inbound).
+apt-get update -y
+DEBIAN_FRONTEND=noninteractive apt-get install -y postgresql
+PGCONF=$(ls -d /etc/postgresql/*/main)
+echo "listen_addresses = '*'" >> $PGCONF/postgresql.conf
+echo "host all all 100.64.0.0/10 scram-sha-256" >> $PGCONF/pg_hba.conf
+systemctl restart postgresql
+sudo -u postgres psql -c "CREATE ROLE meridian LOGIN PASSWORD '${db_password}';"
+sudo -u postgres psql -c "CREATE DATABASE meridian OWNER meridian;"

@@ -9,3 +9,7 @@ crash.log
 .DS_Store
 .claude/
 CLAUDE.md
+
+# Local secrets
+env.sh
+*.env

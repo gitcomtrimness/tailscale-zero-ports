@@ -10,11 +10,15 @@ terraform {
       source  = "tailscale/tailscale"
       version = "~> 0.21"
     }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.6"
+    }
   }
 }
 
 provider "aws" {
-  region = "us-east-1"
+  region = "us-east-2"
 }
 
 # Reads TAILSCALE_API_KEY from the environment.
