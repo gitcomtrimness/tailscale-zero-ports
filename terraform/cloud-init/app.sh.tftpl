@@ -1,0 +1,80 @@
+#!/bin/bash
+# First-boot setup for prod-app. Rendered by Terraform templatefile().
+set -euo pipefail
+
+# Join the tailnet as tag:prod-app and enable Tailscale SSH.
+curl -fsSL https://tailscale.com/install.sh | sh
+tailscale up --auth-key="${ts_auth_key}" --hostname=prod-app --ssh
+
+# Python runs the page; pg_isready (from postgresql-client) checks the database.
+apt-get update -y
+DEBIAN_FRONTEND=noninteractive apt-get install -y postgresql-client python3
+
+# Tiny internal admin page. Listens on localhost only.
+mkdir -p /opt/admin-app
+cat > /opt/admin-app/app.py <<'EOF'
+import datetime
+import html
+import http.server
+import subprocess
+
+
+def db_status():
+    r = subprocess.run(
+        ["pg_isready", "-h", "prod-db", "-p", "5432", "-t", "3"],
+        capture_output=True, text=True,
+    )
+    return r.returncode == 0, (r.stdout or r.stderr).strip()
+
+
+class Handler(http.server.BaseHTTPRequestHandler):
+    def do_GET(self):
+        ok, msg = db_status()
+        # Tailscale Serve adds the viewer's identity to each request.
+        who = self.headers.get("Tailscale-User-Login", "unknown")
+        now = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+        state = "reachable" if ok else "unreachable"
+        color = "#1a7f37" if ok else "#cf222e"
+        body = f"""<!doctype html>
+<html><head><meta charset="utf-8"><title>Meridian Admin</title>
+<style>body{{font-family:system-ui,sans-serif;max-width:640px;margin:48px auto;padding:0 16px;line-height:1.5}}</style>
+</head><body>
+<h1>Meridian Health Analytics: Internal Admin</h1>
+<p>Reached over Tailscale only. This server has no inbound ports open to the internet.</p>
+<p><b>Viewer:</b> {html.escape(who)}</p>
+<p><b>Database (prod-db:5432):</b> <span style="color:{color}">{state}</span><br><small>{html.escape(msg)}</small></p>
+<p><small>Checked {now}</small></p>
+</body></html>"""
+        data = body.encode()
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(data)))
+        self.end_headers()
+        self.wfile.write(data)
+
+    def log_message(self, *args):
+        pass
+
+
+http.server.ThreadingHTTPServer(("127.0.0.1", 8080), Handler).serve_forever()
+EOF
+
+# Run it as a service that restarts if it stops.
+cat > /etc/systemd/system/admin-app.service <<'EOF'
+[Unit]
+Description=Meridian internal admin app
+After=network-online.target tailscaled.service
+
+[Service]
+ExecStart=/usr/bin/python3 /opt/admin-app/app.py
+Restart=always
+User=nobody
+
+[Install]
+WantedBy=multi-user.target
+EOF
+systemctl daemon-reload
+systemctl enable --now admin-app
+
+# Publish it inside the tailnet over HTTPS (port 443, Tailscale certificate).
+tailscale serve --bg 8080
