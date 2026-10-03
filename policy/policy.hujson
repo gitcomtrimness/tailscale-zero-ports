@@ -1,0 +1,71 @@
+// Meridian Health Analytics: tailnet access policy.
+// Deny by default. Every allowed path is listed once below.
+{
+  "groups": {
+    "group:eng":         ["MeridiianHealth@github"],
+    "group:contractors": ["MeridianContractor@github"]
+  },
+
+  // Machine labels, and who may assign them.
+  "tagOwners": {
+    "tag:prod-app": ["autogroup:admin"],
+    "tag:prod-db":  ["autogroup:admin"],
+    "tag:ci":       ["autogroup:admin"]
+  },
+
+  "grants": [
+    // Engineers: admin app, database, and SSH to both servers.
+    {"src": ["group:eng"], "dst": ["tag:prod-app"], "ip": ["tcp:443", "tcp:22"]},
+    {"src": ["group:eng"], "dst": ["tag:prod-db"],  "ip": ["tcp:5432", "tcp:22"]},
+
+    // Contractors: the admin app only.
+    {"src": ["group:contractors"], "dst": ["tag:prod-app"], "ip": ["tcp:443"]},
+
+    // CI: the database only, for migrations.
+    {"src": ["tag:ci"], "dst": ["tag:prod-db"], "ip": ["tcp:5432"]},
+
+    // The app talks to its database.
+    {"src": ["tag:prod-app"], "dst": ["tag:prod-db"], "ip": ["tcp:5432"]}
+
+    //Test
+      //  {"src": ["group:contractors"], "dst": ["tag:prod-db"], "ip": ["tcp:5432"]}
+  ],
+
+  // Shell access: engineers only, as 'ubuntu', with a fresh login required.
+  "ssh": [
+    {
+      "action": "check",
+      "src":    ["group:eng"],
+      "dst":    ["tag:prod-app", "tag:prod-db"],
+      "users":  ["ubuntu"]
+    }
+  ],
+
+  // Assertions checked on every policy change. A failure rejects the change.
+  "tests": [
+    {
+      "src":    "MeridiianHealth@github",
+      "accept": ["tag:prod-app:443", "tag:prod-db:5432", "tag:prod-db:22"]
+    },
+    {
+      "src":    "MeridianContractor@github",
+      "accept": ["tag:prod-app:443"],
+      "deny":   ["tag:prod-db:5432", "tag:prod-app:22", "tag:prod-db:22"]
+    },
+    {
+      "src":    "tag:ci",
+      "accept": ["tag:prod-db:5432"],
+      "deny":   ["tag:prod-app:443", "tag:prod-db:22"]
+    },
+    {
+      "src":    "tag:prod-app",
+      "accept": ["tag:prod-db:5432"],
+      "deny":   ["tag:prod-db:22"]
+    }
+  ],
+
+  "sshTests": [
+    {"src": "MeridiianHealth@github",        "dst": ["tag:prod-db"],  "check": ["ubuntu"], "deny": ["root"]},
+    {"src": "MeridianContractor@github", "dst": ["tag:prod-app"], "deny": ["ubuntu", "root"]}
+  ]
+}
