@@ -84,6 +84,14 @@ Everything not listed is denied by default. SSH is **Tailscale SSH**: engineers 
 | `scripts/validate.sh` | Allowed/denied matrix per identity, plus public-IP probes |
 | `evidence/` | Saved outputs and screenshots from the validation runs |
 
+## Assumptions
+
+- Meridian is fictional. GitHub logins stand in for a corporate identity provider (Okta or Entra ID in a real deployment).
+- Built on Tailscale's free plan. Features that need a paid plan are noted where they come up.
+- The servers have public IPs only so they can reach the internet outbound (no NAT gateway, to keep cost low). The security group allows **no** inbound traffic.
+- Postgres listens on all interfaces, but only tailnet addresses (`100.64.0.0/10`) are allowed to log in, and the firewall blocks everything else.
+- The environment stays running so reviewers can see the tailnet.
+
 ## Prerequisites
 
 - An AWS account (sandbox) and a CLI profile. Built in **us-east-2**, because the sandbox organization's service control policy only allows that region.
@@ -169,6 +177,13 @@ Evidence files: `evidence/validate-engineer.txt`, `evidence/validate-contractor.
 ## AI assistance
 
 I used Claude (Anthropic) as a guide throughout: choosing the use case, structuring the access model, Terraform and policy syntax, the CI workflow, and the validation script. I typed and ran every command, created every file, and reviewed each output before moving on.
+
+**What I reviewed or changed myself:**
+- Chose to keep the full scope (CI, contractor, validation script) rather than cut it for time.
+- Set up the separation myself: a dedicated tailnet, two GitHub identities, and a sandbox AWS account kept apart from my personal and work environments.
+- Worked through real problems as they came up: the AWS organization's region lock (moved the build to us-east-2), the contractor joining the wrong tailnet, files made root-owned by opening them with sudo, and a credentials file that landed in the repo folder (removed before it was ever committed).
+- Checked real output before every next step: Terraform plans before applying, `git status` before every commit, and a scan of the full git history for secrets before making the repo public.
+- Reviewed and edited this README.
 
 Where it was wrong, incomplete, or misleading:
 - It wrote the first policy with email addresses instead of `username@github` login names.
