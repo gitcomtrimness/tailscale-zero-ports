@@ -1,0 +1,61 @@
+name: Migrate database over Tailscale
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "migrations/**"
+      - ".github/workflows/migrate.yml"
+
+permissions:
+  id-token: write # lets the job request a GitHub-signed identity token
+  contents: read
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Exchanges GitHub's identity token for a short-lived key and joins
+      # as an ephemeral tag:ci node. No Tailscale secret is stored.
+      - name: Join tailnet as tag:ci
+        uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          audience: ${{ secrets.TS_AUDIENCE }}
+          tags: tag:ci
+          ping: prod-db
+
+      - name: Install Postgres client
+        run: sudo apt-get update -y && sudo apt-get install -y postgresql-client
+
+      - name: Run migrations against prod-db
+        env:
+          PGHOST: prod-db
+          PGUSER: meridian
+          PGDATABASE: meridian
+          PGPASSWORD: ${{ secrets.DB_PASSWORD }}
+        run: |
+          for f in migrations/*.sql; do
+            echo "Applying $f"
+            psql -v ON_ERROR_STOP=1 -f "$f"
+          done
+          psql -c "SELECT version, applied_at FROM schema_migrations ORDER BY version;"
+
+      # CI may reach the database on 5432 and nothing else.
+      # These steps fail the run if any forbidden path is reachable.
+      - name: Prove CI cannot reach the admin app
+        run: |
+          if nc -z -w 5 prod-app 443; then
+            echo "FAIL: CI reached prod-app:443"; exit 1
+          fi
+          echo "PASS: prod-app:443 denied"
+
+      - name: Prove CI cannot SSH to the database server
+        run: |
+          if nc -z -w 5 prod-db 22; then
+            echo "FAIL: CI reached prod-db:22"; exit 1
+          fi
+          echo "PASS: prod-db:22 denied"
