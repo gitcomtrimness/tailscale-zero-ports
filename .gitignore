@@ -1,0 +1,11 @@
+# Terraform working files and state (state can contain secrets)
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+crash.log
+
+# Local tool and OS clutter
+.DS_Store
+.claude/
+CLAUDE.md
