@@ -1,0 +1,23 @@
+Tailnet: taila8a920.ts.net
+Signed in as: MeridiianHealth@github
+
+--- engineer (group:eng) ---
+PASS  1  eng -> prod-app:443 (HTTPS)                   expected allow got allow
+PASS  2  eng -> prod-db:5432 (Postgres)                expected allow got allow
+PASS  3  eng -> prod-db (Tailscale SSH)                expected allow got allow
+PASS  3b eng -> prod-app (Tailscale SSH)               expected allow got allow
+PASS  11 prod-app -> prod-db:5432 (via app)            expected allow got allow
+
+For the contractor run, first set:
+  export PROD_DB_TS_IP=100.114.220.111
+
+--- public internet (row 10) ---
+PASS  10 internet -> prod-db public :22                expected deny  got deny
+PASS  10 internet -> prod-db public :443               expected deny  got deny
+PASS  10 internet -> prod-db public :5432              expected deny  got deny
+PASS  10 internet -> prod-app public :22               expected deny  got deny
+PASS  10 internet -> prod-app public :443              expected deny  got deny
+PASS  10 internet -> prod-app public :8080             expected deny  got deny
+
+Rows 7-9 (CI) are checked inside GitHub Actions.
+Result: 11 passed, 0 failed

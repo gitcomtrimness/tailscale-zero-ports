@@ -1,0 +1,19 @@
+Tailnet: taila8a920.ts.net
+Signed in as: MeridianContractor@github
+
+--- contractor (group:contractors) ---
+PASS  4  contractor -> prod-app:443 (HTTPS)            expected allow got allow
+PASS  5  contractor -> prod-db (name visible)          expected deny  got deny
+PASS  5b contractor -> prod-db:5432 (by IP)            expected deny  got deny
+PASS  6  contractor -> prod-app:22                     expected deny  got deny
+
+--- public internet (row 10) ---
+PASS  10 internet -> prod-db public :22                expected deny  got deny
+PASS  10 internet -> prod-db public :443               expected deny  got deny
+PASS  10 internet -> prod-db public :5432              expected deny  got deny
+PASS  10 internet -> prod-app public :22               expected deny  got deny
+PASS  10 internet -> prod-app public :443              expected deny  got deny
+PASS  10 internet -> prod-app public :8080             expected deny  got deny
+
+Rows 7-9 (CI) are checked inside GitHub Actions.
+Result: 10 passed, 0 failed

@@ -1,0 +1,12 @@
+migrate	Run migrations against prod-db	2026-10-03T19:07:29.1085677Z ^[[36;1m  echo "Applying $f"^[[0m
+migrate	Run migrations against prod-db	2026-10-03T19:07:29.1086687Z ^[[36;1mpsql -c "SELECT version, applied_at FROM schema_migrations ORDER BY version;"^[[0m
+migrate	Run migrations against prod-db	2026-10-03T19:07:29.1153817Z   PGPASSWORD: ***
+migrate	Run migrations against prod-db	2026-10-03T19:07:29.1239340Z Applying migrations/001_init.sql
+migrate	Run migrations against prod-db	2026-10-03T19:07:30.4965492Z  version  |          applied_at           
+migrate	Run migrations against prod-db	2026-10-03T19:07:30.4967478Z  001_init | 2026-10-03 19:07:29.887234+00
+migrate	Prove CI cannot reach the admin app	2026-10-03T19:07:30.5015748Z ^[[36;1m  echo "FAIL: CI reached prod-app:443"; exit 1^[[0m
+migrate	Prove CI cannot reach the admin app	2026-10-03T19:07:30.5016317Z ^[[36;1mecho "PASS: prod-app:443 denied"^[[0m
+migrate	Prove CI cannot reach the admin app	2026-10-03T19:07:30.5251704Z PASS: prod-app:443 denied
+migrate	Prove CI cannot SSH to the database server	2026-10-03T19:07:30.5308138Z ^[[36;1m  echo "FAIL: CI reached prod-db:22"; exit 1^[[0m
+migrate	Prove CI cannot SSH to the database server	2026-10-03T19:07:30.5308860Z ^[[36;1mecho "PASS: prod-db:22 denied"^[[0m
+migrate	Prove CI cannot SSH to the database server	2026-10-03T19:07:35.5585467Z PASS: prod-db:22 denied

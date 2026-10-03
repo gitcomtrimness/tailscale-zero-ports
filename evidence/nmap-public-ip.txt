@@ -1,0 +1,24 @@
+valhalla@Mac tailscale-zero-ports % nmap -Pn -p 22,80,443,5432 3.145.46.245
+
+Starting Nmap 7.991 ( https://nmap.org ) at 2026-10-03 13:59 -0400
+Nmap scan report for ec2-3-145-46-245.us-east-2.compute.amazonaws.com (3.145.46.245)
+Host is up.
+
+PORT     STATE    SERVICE
+22/tcp   filtered ssh
+80/tcp   filtered http
+443/tcp  filtered https
+5432/tcp filtered postgresql
+
+Nmap done: 1 IP address (1 host up) scanned in 3.49 seconds
+valhalla@Mac tailscale-zero-ports % nmap -Pn --top-ports 1000 3.145.46.245
+Starting Nmap 7.991 ( https://nmap.org ) at 2026-10-03 13:59 -0400
+
+valhalla@Mac tailscale-zero-ports % nmap -Pn -T4 --max-retries 1 --top-ports 1000 3.145.46.245
+Starting Nmap 7.991 ( https://nmap.org ) at 2026-10-03 14:01 -0400
+Nmap scan report for ec2-3-145-46-245.us-east-2.compute.amazonaws.com (3.145.46.245)
+Host is up.
+All 1000 scanned ports on ec2-3-145-46-245.us-east-2.compute.amazonaws.com (3.145.46.245) are in ignored states.
+Not shown: 1000 filtered tcp ports (no-response)
+
+Nmap done: 1 IP address (1 host up) scanned in 203.67 seconds

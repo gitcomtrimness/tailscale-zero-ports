@@ -1,0 +1,8 @@
+valhalla@Mac tailscale-zero-ports % nc -zv -w 3 100.114.220.111 5432
+
+nc: connectx to 100.114.220.111 port 5432 (tcp) failed: Operation timed out
+valhalla@Mac tailscale-zero-ports % nc -zv -w 3 prod-app 22
+
+nc: connectx to prod-app port 22 (tcp) failed: Operation timed out
+valhalla@Mac tailscale-zero-ports % tailscale ssh ubuntu@prod-app
+ssh: connect to host prod-app.taila8a920.ts.net. port 22: Operation timed out
