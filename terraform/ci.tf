@@ -1,10 +1,10 @@
 # Trust GitHub Actions' identity tokens, but only from this repo's main branch.
-# The workflow exchanges its token for a short-lived key and joins as an
-# ephemeral tag:ci node. No Tailscale secret is stored in GitHub.
+# GitHub's subject includes the account and repo IDs (name@id), so a deleted
+# and recreated repo with the same name is NOT trusted.
 resource "tailscale_federated_identity" "ci" {
   description = "GitHubActionsCI"
   issuer      = "https://token.actions.githubusercontent.com"
-  subject     = "repo:gitcomtrimness/tailscale-zero-ports:ref:refs/heads/main"
+  subject     = "repo:gitcomtrimness@232724278/tailscale-zero-ports@1403538242:ref:refs/heads/main"
   scopes      = ["auth_keys"]
   tags        = ["tag:ci"]
 
