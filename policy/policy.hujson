@@ -26,9 +26,6 @@
 
     // The app talks to its database.
     {"src": ["tag:prod-app"], "dst": ["tag:prod-db"], "ip": ["tcp:5432"]}
-
-    //Test
-      //  {"src": ["group:contractors"], "dst": ["tag:prod-db"], "ip": ["tcp:5432"]}
   ],
 
   // Shell access: engineers only, as 'ubuntu', with a fresh login required.
