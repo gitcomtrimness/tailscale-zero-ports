@@ -45,6 +45,12 @@ resource "aws_instance" "db" {
     http_tokens = "required" # IMDSv2 only
   }
 
+  # Keep the image the server was built with. A newer Ubuntu release
+  # should be a deliberate upgrade, not a silent rebuild.
+  lifecycle {
+    ignore_changes = [ami]
+  }
+
   tags = { Name = "prod-db" }
 }
 
